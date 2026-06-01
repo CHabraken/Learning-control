@@ -3,3 +3,6 @@ Arizona[[:space:]]Project filter=lfs diff=lfs merge=lfs -text
 Arizona[[:space:]]project filter=lfs diff=lfs merge=lfs -text
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.mat filter=lfs diff=lfs merge=lfs -text
+*.fig filter=lfs diff=lfs merge=lfs -text
+*.slx filter=lfs diff=lfs merge=lfs -text
+*.mlx filter=lfs diff=lfs merge=lfs -text
