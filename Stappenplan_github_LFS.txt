@@ -1,0 +1,22 @@
+Stappen plan om GitHub werkend te krijgen op je PC (ongeveer 5 min tijd):
+
+1) Install Git		https://git-scm.com/install/windows
+   Install Git-lfs	https://git-lfs.com/
+2) Open Git Bash
+3) First run:
+	git lfs install
+   Second run:
+	git clone https://github.com/CHabraken/Learning-control.git
+4) Go to the installed repo
+	(for me it was: cd Documents/GitHub/Learning-control)
+	Find the right repo using "ls" (Listing files)
+		  	      and "cd" (change directory)
+5) Check if all is done ok:
+	git lfs ls-files
+Resultaat wanneer alles klopt: 		Een grote waslijst met grotendeels "Arizona project"
+Resultaat wanneer iets fout: 		dingen zoals "size 260104857" en "oid sha256:..."
+
+Tip) Download git desktop	https://desktop.github.com/download/
+	Dan hoef je niet te fucken met zooi zoals "git commit" die vervolgens een error geeft want je hebt er geen message bij gedaan (het moet zijn "git commit -m "Hiero nog wat tekst typen voor commits enzo")
+
+	
