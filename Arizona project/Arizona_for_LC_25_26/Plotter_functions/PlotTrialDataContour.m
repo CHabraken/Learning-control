@@ -66,28 +66,28 @@ if init
             h3 = plot(history.t,NaN(history.Nref,1));
             xlabel('Time [s]');
             if jj == 1 
-                ylabel(['$', names{ii}, '$ ', units{ii}]);
+                ylabel(['$', names{ii}, '$ ', units{ii}], Interpreter='latex');
                 set(h1,'LineStyle',p_j_min_1_style,'Color',p_j_min_1_color);
                 set(h2,'LineStyle',p_j_style,'Color',p_j_color);
                 set(h3,'LineStyle',ref_style,'Color',ref_color);
-                legend([h1,h2,h3],{['$ ',names{ii},'_{j-1}$'],['$ ',names{ii},'_{j}$'],'$r_{j}$'})
+                legend([h1,h2,h3],{['$ ',names{ii},'_{j-1}$'],['$ ',names{ii},'_{j}$'],'$r_{j}$'}, Interpreter="latex")
             elseif jj == 2
-                ylabel(['$', names{ii}, '$ ', units{ii}]);
+                ylabel(['$', names{ii}, '$ ', units{ii}], Interpreter="latex");
                 set(h1,'LineStyle',r_y_j_min_1_style,'Color',r_y_j_min_1_color);
                 set(h2,'LineStyle',r_y_j_style,'Color',r_y_j_color);
                 set(h3,'LineStyle',ref_style,'Color',ref_color);
-                legend([h1,h2],{'$r_{y_j}$','$r_{y_{j+1}}$'})
+                legend([h1,h2],{'$r_{y_j}$','$r_{y_{j+1}}$'}, Interpreter="latex")
             elseif jj == 3
-                ylabel(['$f_', names{ii}, '$ [V]']);
+                ylabel(['$f_', names{ii}, '$ [V]'], Interpreter="latex");
                 set(h1,'LineStyle',f_j_min_1_style,'Color',f_j_min_1_color);
                 set(h2,'LineStyle',f_j_style,'Color',f_j_color);
                 set(h3,'LineStyle',f_j_plus_1_style,'Color',f_j_plus_1_color);
-                legend([h1,h2,h3],{'$f_{j-1}$','$f_{j}$','$f_{j+1}$'})
+                legend([h1,h2,h3],{'$f_{j-1}$','$f_{j}$','$f_{j+1}$'}, Interpreter="latex")
             elseif jj == 4
-                ylabel(['$e_', names{ii}, '$ ', units{ii}]);
+                ylabel(['$e_', names{ii}, '$ ', units{ii}], Interpreter="latex");
                 set(h1,'LineStyle',e_j_min_1_style,'Color',e_j_min_1_color);
                 set(h2,'LineStyle',e_j_style,'Color',e_j_color);
-                legend([h1,h2],{'$e_{j-1}$','$e_{j}$'})
+                legend([h1,h2],{'$e_{j-1}$','$e_{j}$'}, Interpreter="latex")
             end
             cell_handles{ii,jj}{1} = ax;
             cell_handles{ii,jj}{2} = h1; % serves as var_{j-1} e.g. e_{j-1}
@@ -102,7 +102,7 @@ if init
         id = (ii-1)*hor + jj;
         ax = subplot(vert,hor,id); hold on; grid on; grid minor;
         xlabel('Trial');
-        ylabel(['$||e_ ', names{ii}, '||_2$'])
+        ylabel(['$||e_ ', names{ii}, '||_2$'], Interpreter="latex")
         h_2 = plot(history.trials, NaN(size(history.trials)));
         set(ax,'XTick',history.trials,'YScale','log')
         set(h_2,'LineStyle',e_j_style,'Color',e_j_color,'Marker','o')
@@ -132,15 +132,15 @@ if init
 
     % Titles
     subplot(vert,hor,1)
-    title('\textbf{Output}')
+    title('\textbf{Output}', Interpreter='latex')
     subplot(vert,hor,2)
-    title('\textbf{Shaped Reference}')
+    title('\textbf{Shaped Reference}', Interpreter='latex')
     subplot(vert,hor,3)
-    title('\textbf{Input}')
+    title('\textbf{Input}', Interpreter='latex')
     subplot(vert,hor,4)
-    title('\textbf{Error}')
+    title('\textbf{Error}', Interpreter='latex')
     subplot(vert,hor,5)
-    title('\textbf{2-norms of error}')
+    title('\textbf{2-norms of error}', Interpreter='latex')
 %     subplot(vert,hor,6)
 %     title('\textbf{2D}')
 
