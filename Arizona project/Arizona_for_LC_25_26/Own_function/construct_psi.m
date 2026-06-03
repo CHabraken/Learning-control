@@ -1,4 +1,9 @@
-function Phi = construct_phi(nd,no,r)
+function Psi = construct_psi(nd,no,r)
+
+if(isempty(r))
+    Psi = [];
+    return
+end
 
 total_len = no + nd;
 
@@ -13,7 +18,7 @@ rd(N+1:end) = rend;
 first_row = zeros(1, total_len);
 first_row(1) = rd(1);
 
-Phi = toeplitz(rd, first_row);
-Phi = Phi(nd+1:end,1:no);
+Psi = toeplitz(rd, first_row);
+Psi = Psi(nd+1:end,1:no);
 
 end
