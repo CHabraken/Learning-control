@@ -27,12 +27,12 @@ Ts = 0.001; % sampling time
 
 %% Generate reference
 % [xref, yref, phiref, t] = reference_square(Ts);
-%[xref, yref, phiref, t] = reference_triangle(Ts);
+% [xref, yref, phiref, t] = reference_triangle(Ts);
 % [xref, yref, phiref, t] = reference_rounded_rectangle(Ts);
 load('test_reference.mat')
 N = 13000;
 [yref, xref, phiref, t] = pad_reference_to_N_zeros(yref, xref, phiref,N, Ts);
-xref = xref*0;
+% xref = xref*0;
 t = t';
 % traj_number = 1;    
 % % size_i = length(yRefs{traj_number});
@@ -40,7 +40,7 @@ t = t';
 % times = linspace(0,size_i/Ts,size_i)';
 % xref = zeros(size_i,1);
 % yref = yRefs{:,traj_number};
-% phiref =zeros(size_i,1);
+% phiref = zeros(size_i,1);
 % t = times;
 
 Nref = length(xref);
@@ -77,6 +77,7 @@ C_zpk = blkdiag(Cy, Cx, Cphi);
 P_zpk = blkdiag(Py, Px, Pphi);
 
 %% lifted ILC
+
 
 
 %% Interconnection.
@@ -122,8 +123,8 @@ for jj = 1:N_trials
     % Check ffw
     % Not necessary in simulation. Can be uncommented to see what's
     % happening
-%     fprintf('Waiting for key press.\n')
-%     pause;
+    % fprintf('Waiting for key press.\n')
+    % pause;
     
     % Increase trial in plot
     PlotTrialDataContour(history,jj,0,1,0,0,0,0,0);
@@ -153,8 +154,8 @@ for jj = 1:N_trials
         r_jplus1 = r_j; % Reference is trial-invariant here
         
         %% Your code here
-%         f_jplus1 = ILC_update_zeros(e_j,f_j);
-        f_jplus1 = feedforwardUpdateSim(SP,t,r_j,e_j,f_j,Ts);
+        f_jplus1 = ILC_update_zeros(e_j,f_j);
+        % f_jplus1 = feedforwardUpdateSim(SP,t,r_j,e_j,f_j,Ts);
         
         %%       
         % Store in FFW
