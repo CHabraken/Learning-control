@@ -22,7 +22,7 @@ addpath(genpath('../Utility_functions'))
 addpath(genpath('../ILC_updates'))
 %% Parameters and settings
 Ts = get_Arizona_pars();
-N_trials = 15; % 1,...,N_trial
+N_trials = 5; % 1,...,N_trial
 Ts = 0.001; % sampling time
 
 %% Generate reference
@@ -86,7 +86,13 @@ P_zpk = blkdiag(Py, Px, Pphi);
 % [no,ni] = size(D);
 ni = 3;
 no = 3;
-%% ILC startup initialization: your code here!
+%% ======================================================
+% ILC startup initialization: your code here!
+% =======================================================
+
+
+
+
 
 %% Initialization
 % history struct. All communication and plotting done through this struct.
@@ -105,8 +111,8 @@ history.Nref = Nref;
 % Initial FFW and reference
 history.r(1,:,:) = [yref, xref, phiref]; % Order [y x phi]
 history.f(1,:,:) = zeros(Nref,ni);
-PlotTrialDataContour(history,0,1,0,0,1,0,0); % Plots initial input
-PlotTrialDataContour(history,1,0,0,0,0,1,0); % Plots reference
+PlotTrialDataContour(history,0,1,0,0,1,0,0,0); % Plots initial input
+PlotTrialDataContour(history,1,0,0,0,0,1,0,0); % Plots reference
 
 %% Execute trials
 for jj = 1:N_trials
@@ -120,7 +126,7 @@ for jj = 1:N_trials
 %     pause;
     
     % Increase trial in plot
-    PlotTrialDataContour(history,jj,0,1,0,0,0,0);
+    PlotTrialDataContour(history,jj,0,1,0,0,0,0,0);
     
     % Set reference and feedforward. Used like this in simulink
     f_j = squeeze(history.f(jj,:,:));
@@ -140,7 +146,7 @@ for jj = 1:N_trials
     history.epsilon(jj,:)   = epsilon;
     history.epsilonNorm(jj) = vecnorm(epsilon);
     
-    PlotTrialDataContour(history,jj,0,0,0,0,0,1); % Plots error and position
+    PlotTrialDataContour(history,jj,0,0,0,0,0,1,0); % Plots error and position
     
     % Select new reference and feedforward.
     if jj ~= N_trials
@@ -148,13 +154,13 @@ for jj = 1:N_trials
         
         %% Your code here
 %         f_jplus1 = ILC_update_zeros(e_j,f_j);
-        f_jplus1 = feedforwardUpdateSim(SP,t,r_j,e_j,f_j,Ts)
+        f_jplus1 = feedforwardUpdateSim(SP,t,r_j,e_j,f_j,Ts);
         
         %%       
         % Store in FFW
         history.r(jj+1,:,:) = r_jplus1;
         history.f(jj+1,:,:) = f_jplus1;
         
-        PlotTrialDataContour(history,jj,0,0,0,1,0,0); % Plots new ffw
+        PlotTrialDataContour(history,jj,0,0,0,1,0,0,0); % Plots new ffw
     end
 end
