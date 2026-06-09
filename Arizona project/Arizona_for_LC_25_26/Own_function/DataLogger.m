@@ -140,7 +140,10 @@ classdef DataLogger < handle
             end
         end
         function WriteTrialData(obj)
-
+            if(obj.file_id == -1)
+                warning('file not open, data not logged!');
+                return;
+            end  
             names = keys(obj.TrialParameters);
 
             colWidth = max(cellfun(@length,names)) + 4;
@@ -198,6 +201,10 @@ classdef DataLogger < handle
 
         end
         function WriteTrialDataAscii(obj)
+            if(obj.file_id == -1)
+                warning('file not open, data not logged!');
+                return;
+            end  
             fprintf(obj.file_id,'\nTrial Data:\n');
 
             colWidth = 20;
