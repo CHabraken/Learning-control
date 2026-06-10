@@ -1,6 +1,18 @@
 % Simulation for experiments
-clear, close, clc
+clear; close all; clc;
 
+addpath(genpath('../Models'))
+addpath(genpath('../Own_function'))
+addpath(genpath('../Reference_generators'))
+addpath(genpath('../Helper_functions'))
+addpath(genpath('../Models_new/Models/Parametric'))
+addpath(genpath('../Models_new/Models/Nonparametric'))
+
+%% There are two different type of controllers given for this assignment. One of the works fine, the other one does not.
+addpath(genpath('../Controllers/Controllers_simulation'))
+% addpath(genpath('../Controllers'))
+
+%% 
 % parameters
 
 L = 2.62; % gantry length
@@ -30,13 +42,13 @@ noiseSTD = 1e-5;
 
 % models
 
-P = load('Arizona_models_new\Models\Parametric\P_centralized.mat').Pz;
-Cx = load('Arizona_models_new\Controllers\xController.mat').Cx;
-Cphi = load('Arizona_models_new\Controllers\phiController.mat').Cphi;
+P = load('P_centralized.mat').Pz;
+Cx = load('xController.mat').Cx;
+Cphi = load('phiController.mat').Cphi;
 
 Ts = P.Ts;
 
-Pfrf = load("Arizona_models_new\Models\Nonparametric\Gantry_FRF_centralized.mat");
+Pfrf = load("Gantry_FRF_centralized.mat");
 Pfrf = Pfrf.P_carriage_left;
 
 
