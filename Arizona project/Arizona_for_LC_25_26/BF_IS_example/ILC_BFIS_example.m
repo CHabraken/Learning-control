@@ -8,6 +8,10 @@
 % receive new models soon.
 
 clear variables
+addpath(genpath('../Reference_generators'))
+addpath(genpath('../Controllers'))
+addpath(genpath('../Models'))
+addpath(genpath('../Helper_functions'))
 
 %% Settings
 system = 'arizona_x';                                                       % Run two different systems: arizona_x / 4th_order
@@ -42,13 +46,10 @@ method = 'ILC';                                                             % IL
 switch system
     case 'arizona_x'
         % Load the Arizona x models
-        cd Arizona_models_old\Models\
         P = ((load('Px_fit.mat').Px_DT));
         Ts = P.Ts;
         z = tf('z',Ts);
-        cd ..\Controllers
         Cfb = c2d(load('xController.mat').Cx_CT,Ts,'Tustin');
-        cd ..\..
 
     case '4th_order'
         % Load the rational example system
@@ -176,7 +177,7 @@ semilogy(e_ynorm,'k--'); hold on
 semilogy(e_norm,'r--')
 xticks([1:N_trials])
 xlabel('Trials')
-legend('$e_y$','$e$')
+legend({'$e_y$','$e$'}, Interpreter="latex")
 ylabel('Error norm')
 
 nexttile;
@@ -185,7 +186,7 @@ plot(t,r_y(:,plot_trial))
 xline(t(rendidx),'-','$r = \bar{r}$','Interpreter','latex','FontSize',16)
 xlim([t(rendidx-50) t(rendidx+200)])
 ylim(max(r)*0.1*[9.9 10.05])
-legend('$r$','$r_y$')
+legend({'$r$','$r_y$'}, Interpreter="latex")
 xlabel('Time')
 ylabel('Reference')
 
@@ -195,17 +196,20 @@ plot(t,e(:,plot_trial));
 xline(t(rendidx),'-','$r = \bar{r}$','LabelHorizontalAlignment','left','Interpreter','latex','FontSize',16)
 xline(t(rendidx+Ndelay),'-','$T_1 + n_a$','Interpreter','latex','FontSize',16)
 xlim([t(rendidx-50) t(rendidx+200)])
-legend('$e_1$','$e_{' + string(plot_trial)+ '}$')
+legend({'$e_1$','$e_{' + string(plot_trial)+ '}$'}, Interpreter="latex")
 xlabel('Time')
 ylabel('error')
 
+opts = bodeoptions("cstprefs");
+opts.FreqUnits = 'Hz';
+opts.Grid = 'on';
 
 figure(2);clf
 subplot(121)
-bodemag(Cff,Cy)
-legend('location','northwest')
+bodemag(Cff,Cy, opts)
+legend({'$C^{ff}$','$C_{y}$'}, Interpreter="latex")
 
 subplot(122)
-bodemag(P); hold on
-bodemag(Cy/Cff,'r--')
-legend('$P$','$C\_y / C\_{ff}$','location','northeast','interpreter','latex')
+bodemag(P, opts); hold on
+bodemag(Cy/Cff,'r--', opts)
+legend({'$P$','$\frac{C_y}{C^{ff}}$'},'location','northeast','interpreter','latex')
