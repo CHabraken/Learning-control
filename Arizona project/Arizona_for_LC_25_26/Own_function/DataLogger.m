@@ -2,6 +2,7 @@ classdef DataLogger < handle
 
     properties (Access=public)
         FileName
+        FullPath_file
         NameValuePairs
         TrialParameters
     end
@@ -27,7 +28,7 @@ classdef DataLogger < handle
             if ~exist(Folder, 'dir')
                 mkdir(Folder);
             end
-             
+            obj.folder = Folder;
             FullPath = fullfile(Folder, FileName);
             new = 0;
 
@@ -41,7 +42,7 @@ classdef DataLogger < handle
                FullPath = [];
                return
             end
-
+            obj.FullPath_file = FullPath;
             if(~new)
                 fprintf(obj.file_id,'\n\n\n'); %make space from last measurement
             end
@@ -49,8 +50,25 @@ classdef DataLogger < handle
         function CloseFile(obj)
             obj.cleanup();
         end
-
+        function ClearVariables(obj)
+            remove(obj.NameValuePairs, keys(obj.NameValuePairs));
+            remove(obj.TrialParameters, keys(obj.TrialParameters));
+        end
+        
         %Store Measurement settings
+        function StoreHistory(obj,history)
+            if(isempty(obj.folder))
+                warning("folder not set, run OpenFile() first!");
+                return;
+            end
+            if(isempty(obj.FileName))
+                warning("Measurement not set, run SetMeasurement() first!");
+                return;
+            end
+
+            FullPath = fullfile(obj.folder,obj.FileName);
+            save(FullPath,"history"); 
+        end
         function SetGeneralParameters(obj, varargin)
             if mod(length(varargin),2) ~= 0
                 error('Arguments must be supplied as name-value pairs.');
@@ -72,7 +90,7 @@ classdef DataLogger < handle
             end
         end
         function SetMeasurement(obj, measurement)
-            obj.FileName = measurement;
+            obj.FileName = obj.getNextMeasurementName(obj.FullPath_file,measurement);
         end
         
         %Store Trial parameters
@@ -278,11 +296,14 @@ classdef DataLogger < handle
             end
             fprintf(obj.file_id,'\n');
         end
+    
+        
     end
 
     %member variables
     properties (Access = private)
         file_id = -1
+        folder
         cleanupObj
     end
 
@@ -296,6 +317,36 @@ classdef DataLogger < handle
                 obj.file_id = -1;
             end
 
+        end
+
+       function measurementName = getNextMeasurementName(~, filename, baseName)
+
+            txt = fileread(filename);
+        
+            searchStr = sprintf('Measurement : %s_', baseName);
+        
+            idx = strfind(txt, searchStr);
+        
+            if isempty(idx)
+                measurementName = sprintf('%s_1', baseName);
+                return;
+            end
+        
+            % Last occurrence
+            idx = idx(end);
+        
+            % Extract number following the measurement name
+            startPos = idx + length(searchStr);
+        
+            stopPos = startPos;
+            while stopPos <= length(txt) && isstrprop(txt(stopPos),'digit')
+                stopPos = stopPos + 1;
+            end
+        
+            lastIndex = str2double(txt(startPos:stopPos-1));
+        
+            measurementName = sprintf('%s_%d', baseName, lastIndex + 1);
+        
         end
     end
     methods (Static,Access=private)
