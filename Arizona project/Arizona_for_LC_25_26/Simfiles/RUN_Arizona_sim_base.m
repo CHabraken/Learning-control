@@ -24,7 +24,7 @@ addpath(genpath('../ILC_updates'))
 addpath(genpath('../Models_new/Models/Parametric'))
 %% Parameters and settings
 Ts = get_Arizona_pars();
-N_trial = 6; % 1,...,N_trial
+N_trial = 7; % 1,...,N_trial
 
 %% Generate reference
 % [xref, yref, phiref, t] = reference_square(Ts);
@@ -101,58 +101,64 @@ S_mimo = loops.So;
 T_mimo = loops.Ti;
 
 %% -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-% Parameterize input shaper Cy (need to copy to run file)
+% Parameterize input shaper Cff_y (need to copy to run file)
 % -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ni = 3;
 no = 3; 
 % initialize shaped reference
-
-
-na = 0;
-Psi_y = tf(zeros(1,na));
-for i = 1:na
-    num = zeros(1,i+1);
-    for k = 0:i
-        num(k+1) = (-1)^k * nchoosek(i,k);                                  % derivative basis function, i.e., (1-z^-1)/Ts . Feel free to play with the basis functions.
-    end
-        Psi_y(i) = minreal(tf(num,1,Ts,'Variable','z^-1'));
-end
     
 %% -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-    
 % Parameterize feedforward Cff (need to copy to run file)
 % -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-nb_x = 0;
-Psi_ff_x = tf(zeros(1,nb_x));
-for i = 1:nb_x
-    num = zeros(1,i+1);
-    for k = 0:i
-        num(k+1) = (-1)^k * nchoosek(i,k);                                  % derivative basis function, i.e., (1-z^-1)/Ts . Feel free to play with the basis functions.
-    end
-        Psi_ff_x(i) = minreal(tf(num,1,Ts,'Variable','z^-1'));
-end
+% Initializing the Psi variables. Used for when you want to have "empty"
+% basis functions for Cff_y, Cff_x and/or Cff_phi.
+Psi_y = tf([]);
+Psi_ff_x = tf([]);
+Psi_ff_phi = tf([]);
 
-nb_phi = 0;
-Psi_ff_phi = tf(zeros(1,nb_phi));
-for i = 1:nb_phi
-    num = zeros(1,i+1);
-    for k = 0:i
-        num(k+1) = (-1)^k * nchoosek(i,k);                                  % derivative basis function, i.e., (1-z^-1)/Ts . Feel free to play with the basis functions.
-    end
-        Psi_ff_phi(i) = minreal(tf(num,1,Ts,'Variable','z^-1'));
-end
+% -+-+-+-+-+-+-+-+ Add Basis functions for C^{y} below -+-+-+-+-+-+-+-+
+% Psi_y(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');
+
+% -+-+-+-+-+-+-+-+ Add Basis functions for C^{ff}_x -+-+-+-+-+-+-+-+
+Psi_ff_x(1) = tf([1 -2 1],Ts^2,Ts,'Variable','z^-1');   % Acceleration basis function
+Psi_ff_x(2) = tf([1 -1],Ts,Ts,'Variable','z^-1');       % First derivative.
+
+% -+-+-+-+-+-+-+-+ Add Basis functions for C^{ff}_{phi} -+-+-+-+-+-+-+-+
+% Psi_ff_phi(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');
+
+
+% Intial theta theta -> [Cff_y Cff_x Cff_phi]
+theta_init = [0 26 5]';
+
+
+
+
+% Checking the sizes of C^ff and C^y.
+nb_x = size(Psi_ff_x, 2);
+nb_phi = size(Psi_ff_phi, 2);
+na = size(Psi_y, 2);
 
 % Basis functions matrix Psi.
 Psi = minreal([Psi_y, Psi_ff_x, Psi_ff_phi]);
+
+% Making sure theta is the right size if you forget to add an initial
+% condition.
+if size(Psi,2) > size(theta_init,1)
+    % If initial Theta is too small, add zeros to make it the same size as
+    % Psi.
+    theta_init(end+1:size(Psi,2)) = 0;
+elseif size(theta_init,1) > size(Psi,2)
+    % If initial Theta is too large, make it the same size as Psi by
+    % cutting the last entries.
+    theta_init = theta_init(1:size(Psi,2));
+end
 
 history.r_y = zeros(N_trial,Nref,no); 
 
 %% -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 % lifted ILC (Need to copy to run file)
 % -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-% Intial theta
-theta_init = zeros(size(Psi,2),N_trial);
 
 % Defining the weighting Mats.
 weight.wdf      = 0e-6;
@@ -242,22 +248,33 @@ for jj = 1:N_trial
         theta_delta = FeedforwardUpdate_BFIS_simo(na,nb_x,nb_phi,Psi,Nref,S_mimo,GS_mimo,weight,e_j,squeeze(history.r_y(jj,:,:)),f_j,xref,t,Ts);
         % theta_delta = zeros(size(history.theta(:,jj)));
 
-        Cy  = minreal(1 + Psi_y*history.theta(1:na,jj));
+        Cff_y  = minreal(1 + Psi_y*history.theta(1:na,jj));
         Cff_x = minreal(Psi_ff_x*history.theta(na+1:na+nb_x,jj));
         Cff_phi = minreal(Psi_ff_phi*history.theta(na+nb_x+1:end,jj));
         
-
         f_jplus1 = zeros(Nref,ni);
-        f_jplus1(:,2) = brfus_v003(Cff_x,xref,t,Ts);
-        f_jplus1(:,3) = brfus_v003(Cff_phi,xref,t,Ts);
-        % ry_plus1 = history.r(jj+1,:,:);
-        ry_plus1 = brfus_v003(Cy,xref,t,Ts);
+
+        % Checks if Cff_x is empty. If yes -> does nothing
+        if ~isempty(Cff_x) 
+            f_jplus1(:,2) = brfus_v003(Cff_x,xref,t,Ts);
+        else
+            f_jplus1(:,2) = f_j(:,2);
+        end
+        % Checks if Cff_phi is empty. If yes -> does nothing
+        if ~isempty(Cff_phi)
+            f_jplus1(:,3) = brfus_v003(Cff_phi,xref,t,Ts);
+        else
+            f_jplus1(:,3) = f_j(:,3);
+        end
+        % Checks if Cff_y is empty. If yes -> does nothing
+        if ~isempty(Cff_y)
+            ry_plus1 = brfus_v003(Cff_y,xref,t,Ts);
+        else
+            ry_plus1 = r_j;
+        end
         
         
         theta_jplus1= history.theta(:,jj) + theta_delta;
-
-
-
 
         %%       
         % Store in FFW

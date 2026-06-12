@@ -53,6 +53,13 @@ function theta_delta = FeedforwardUpdate_BFIS_simo(na,nb_x,nb_phi,Psi,N,S,PS,wei
     %     Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(1,2),Psi(na+nb_x+1:end))).',r,t,Ts);
     %     Phi(2:2:end,na+nb_x+1:end) = brfus_v003((series(PS(2,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(2,2),Psi(na+nb_x+1:end))).',r,t,Ts);
     % end
+    if nb_x ~=0 && nb_phi ~= 0
+        test = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts);
+        test2 = brfus_v003((series(PS(1,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+        disp(size(test));
+        disp(size(test2));
+    end
+
     if nb_x ~= 0
         % Phi(:,na+1:end) = brfus_v003((series(PS,Psi(na+1:end))).',r,t,Ts);
         Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts);
