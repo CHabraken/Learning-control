@@ -24,8 +24,7 @@ addpath(genpath('../ILC_updates'))
 addpath(genpath('../Models_new/Models/Parametric'))
 %% Parameters and settings
 Ts = get_Arizona_pars();
-N_trial = 5; % 1,...,N_trial
-Ts = 0.001; % sampling time
+N_trial = 6; % 1,...,N_trial
 
 %% Generate reference
 % [xref, yref, phiref, t] = reference_square(Ts);
@@ -33,7 +32,7 @@ Ts = 0.001; % sampling time
 % [xref, yref, phiref, t] = reference_rounded_rectangle(Ts);
 % load('test_reference.mat')
 load('Reference_X_slow');
-N = 13000;
+N = 7000;
 [yref, xref, phiref, t] = pad_reference_to_N_zeros(yref, xref, phiref,N, Ts);
 % xref = xref*0;
 yref = yref*0;
@@ -51,25 +50,21 @@ Nref = length(xref);
 %% Load  loop system (after decoupling) and controllers
 
 % y translation
-load('yControllerBad.mat')
-Cy = shapeit_data.C_tf;
-Cy_DT = shapeit_data.C_tf_z;
-load('Py_fit.mat')
-Py = Py_CT;
+Cy = load('yControllerBad.mat').shapeit_data.C_tf;
+Cy_DT = load('yControllerBad.mat').shapeit_data.C_tf_z;
+Py = load('Py_fit.mat').Py_CT;
+Py_DT = load('Py_fit.mat').Py_DT;
 
 
 % x translation
-load('xControllerBad.mat');
-Cx = shapeit_data.C_tf;
-Cx_DT = shapeit_data.C_tf_z;
-load('Px_fit.mat')
-Px = Px_CT;
+Cx = load('xControllerBad.mat').shapeit_data.C_tf;
+Cx_DT = load('xControllerBad.mat').shapeit_data.C_tf_z;
+Px = load('Px_fit.mat').Px_CT;
 
 % phi rotation
-load('phiController.mat');
-Cphi = Cphi_CT;
-load('Pphi_fit.mat')
-Pphi = Pphi_CT;
+Cphi = load('phiController.mat').Cphi_CT;
+Cphi_DT = load('phiController.mat').Cphi_DT;
+Pphi = load('Pphi_fit.mat').Pphi_CT;
 
 % Interconnection.
 SPy = minreal(feedback(Py_DT, Cy_DT));
@@ -113,7 +108,7 @@ no = 3;
 % initialize shaped reference
 
 
-na = 2;
+na = 0;
 Psi_y = tf(zeros(1,na));
 for i = 1:na
     num = zeros(1,i+1);
@@ -127,7 +122,7 @@ end
 % Parameterize feedforward Cff (need to copy to run file)
 % -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-nb_x = 4;
+nb_x = 0;
 Psi_ff_x = tf(zeros(1,nb_x));
 for i = 1:nb_x
     num = zeros(1,i+1);
@@ -137,7 +132,7 @@ for i = 1:nb_x
         Psi_ff_x(i) = minreal(tf(num,1,Ts,'Variable','z^-1'));
 end
 
-nb_phi = 4;
+nb_phi = 0;
 Psi_ff_phi = tf(zeros(1,nb_phi));
 for i = 1:nb_phi
     num = zeros(1,i+1);
@@ -147,6 +142,7 @@ for i = 1:nb_phi
         Psi_ff_phi(i) = minreal(tf(num,1,Ts,'Variable','z^-1'));
 end
 
+% Basis functions matrix Psi.
 Psi = minreal([Psi_y, Psi_ff_x, Psi_ff_phi]);
 
 history.r_y = zeros(N_trial,Nref,no); 
@@ -195,7 +191,6 @@ history.trials = 1:N_trial;
 history.Nref = Nref;
 
 history.theta = theta_init;
-history.theta(4,1) = 5e6;
 history.e_y = NaN(N_trial,Nref,no);
 history.weight = weight;
 
@@ -238,14 +233,14 @@ for jj = 1:N_trial
         r_jplus1 = r_j; % Reference is trial-invariant here
         
         %% Your code here
-        f_jplus1 = ILC_update_zeros(e_j,f_j);
+        % f_jplus1 = ILC_update_zeros(e_j,f_j);
         % f_jplus1 = feedforwardUpdateSim(SP,t,r_j,e_j,f_j,Ts);
 
         %% -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
         % Made a small change in the arguments of this function s.t. it can
         % take in the weight structure.
         theta_delta = FeedforwardUpdate_BFIS_simo(na,nb_x,nb_phi,Psi,Nref,S_mimo,GS_mimo,weight,e_j,squeeze(history.r_y(jj,:,:)),f_j,xref,t,Ts);
-        
+        % theta_delta = zeros(size(history.theta(:,jj)));
 
         Cy  = minreal(1 + Psi_y*history.theta(1:na,jj));
         Cff_x = minreal(Psi_ff_x*history.theta(na+1:na+nb_x,jj));
@@ -257,6 +252,7 @@ for jj = 1:N_trial
         f_jplus1(:,3) = brfus_v003(Cff_phi,xref,t,Ts);
         % ry_plus1 = history.r(jj+1,:,:);
         ry_plus1 = brfus_v003(Cy,xref,t,Ts);
+        
         
         theta_jplus1= history.theta(:,jj) + theta_delta;
 

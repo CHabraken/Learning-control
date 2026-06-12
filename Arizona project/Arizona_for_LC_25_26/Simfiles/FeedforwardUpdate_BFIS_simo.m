@@ -13,38 +13,84 @@
 
 function theta_delta = FeedforwardUpdate_BFIS_simo(na,nb_x,nb_phi,Psi,N,S,PS,weight,e_y,r_y,f,r,t,Ts)
 
-    % Matricies
+    % Weighting matricies.
     We_sq = weight.We_sq;
     Wry_sq = weight.Wry_sq;
     Wdry_sq = weight.Wdry_sq;
     Wf_sq = weight.Wf_sq;
     Wdf_sq = weight.Wdf_sq;
 
+    % Making an error signal which alternates the error samples.
+    % e_ys = [e_x(1), e_phi(1), e_x(2), e_phi(2), ... , e_x(N), e_phi(N)]
+    e_ys = zeros(2*N,1);
+    e_ys(1:2:end) = e_y(:,2);
+    e_ys(2:2:end) = e_y(:,3);
 
-        e_ys = zeros(2*N,1);
-        e_ys(1:2:end) = e_y(:,2);
-        e_ys(2:2:end) = e_y(:,3);
+    % Same thing for above, but now with the Feedforward signal.
+    f_s = zeros(2*N,1);
+    f_s(1:2:end) = f(:,2);
+    f_s(2:2:end) = f(:,3);
+    % Reference signal for the x direction
+    r_y = r_y(:,2);
 
-        f_s = zeros(2*N,1);
-        f_s(1:2:end) = f(:,2);
-        f_s(2:2:end) = f(:,3);
-        r_y = r_y(:,2);
+    % Size of Phi. 
+    %   - na     = Amount of params for input shaper Cy
+    %   - nb_x   = Amount of params for ff for x-coordinate
+    %   - nb_phi = Amount of params for ff for phi-coordinate
+    Phi = zeros(2*N,na+nb_x+nb_phi);
 
-        Phi = zeros(2*N,na+nb_x+nb_phi);
-
-        % SIMO thus we can split
+    % Filling Phi and checking if basis functions for the
+    %   - Input shaper
+    %   - Cff for x
+    %   - Cff for phi.
+    % It should be possible to choose no basis functions at all.
+    if na ~= 0
         Phi(1:2:end,1:na) = -brfus_v003((series(S(1,1),Psi(1:na))).',r,t,Ts);
         Phi(2:2:end,1:na) = -brfus_v003((series(S(2,1),Psi(1:na))).',r,t,Ts);
-
+    end
+    % if nb_x ~= 0
+    %     % Phi(:,na+1:end) = brfus_v003((series(PS,Psi(na+1:end))).',r,t,Ts);
+    %     Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(1,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+    %     Phi(2:2:end,na+nb_x+1:end) = brfus_v003((series(PS(2,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(2,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+    % end
+    if nb_x ~= 0
         % Phi(:,na+1:end) = brfus_v003((series(PS,Psi(na+1:end))).',r,t,Ts);
-        Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(1,2),Psi(na+nb_x+1:end))).',r,t,Ts);
-        Phi(2:2:end,na+nb_x+1:end) = brfus_v003((series(PS(2,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(2,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+        Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts);
+    end
+    if nb_phi ~= 0
+        Phi(2:2:end,na+nb_x+1:end) = brfus_v003((series(PS(2,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+    end
 
+
+    Psi_y_r = zeros(N,na);
+    if na ~= 0
+        % Idk why we do this. But na needs to be above 0.
         Psi_y_r = brfus_v003(Psi(1:na).',r,t,Ts);
+    end
 
-        Psi_ff_r = zeros(2*N,nb_x+nb_phi);
+
+    % Idk why we do this tbh.
+    Psi_ff_r = zeros(2*N,nb_x+nb_phi);
+    if nb_x ~= 0
         Psi_ff_r(1:2:end,1:nb_x) = brfus_v003(Psi(na+1:na+nb_x).',r,t,Ts);
+    end
+    if nb_phi ~= 0
         Psi_ff_r(2:2:end,nb_x+1:end) = brfus_v003(Psi(na+nb_x+1:end).',r,t,Ts);
+    end
+
+    % % % SIMO thus we can split
+    % % Phi(1:2:end,1:na) = -brfus_v003((series(S(1,1),Psi(1:na))).',r,t,Ts);
+    % % Phi(2:2:end,1:na) = -brfus_v003((series(S(2,1),Psi(1:na))).',r,t,Ts);
+    % % 
+    % %     % Phi(:,na+1:end) = brfus_v003((series(PS,Psi(na+1:end))).',r,t,Ts);
+    % %     Phi(1:2:end,na+1:na+nb_x) = brfus_v003((series(PS(1,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(1,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+    % %     Phi(2:2:end,na+nb_x+1:end) = brfus_v003((series(PS(2,1),Psi(na+1:na+nb_x))).',r,t,Ts) + brfus_v003((series(PS(2,2),Psi(na+nb_x+1:end))).',r,t,Ts);
+    % % 
+    % %     Psi_y_r = brfus_v003(Psi(1:na).',r,t,Ts);
+    % % 
+    % %     Psi_ff_r = zeros(2*N,nb_x+nb_phi);
+    % %     Psi_ff_r(1:2:end,1:nb_x) = brfus_v003(Psi(na+1:na+nb_x).',r,t,Ts);
+    % %     Psi_ff_r(2:2:end,nb_x+1:end) = brfus_v003(Psi(na+nb_x+1:end).',r,t,Ts);
 
         % Create regressor matrix
         X = [We_sq*Phi;
