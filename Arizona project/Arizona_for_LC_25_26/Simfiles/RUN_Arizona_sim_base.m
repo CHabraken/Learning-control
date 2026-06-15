@@ -10,6 +10,7 @@
 clear variables; close all; clc;
 %% Paths
 addpath(genpath('../Controllers'))
+addpath(genpath('../Controllers\Controllers_simulation'))
 addpath(genpath('../Helper_functions'))
 addpath(genpath('../Models'))
 addpath(genpath('../Pars'))
@@ -60,11 +61,13 @@ Py_DT = load('Py_fit.mat').Py_DT;
 Cx = load('xControllerBad.mat').shapeit_data.C_tf;
 Cx_DT = load('xControllerBad.mat').shapeit_data.C_tf_z;
 Px = load('Px_fit.mat').Px_CT;
+Px_DT = load('Px_fit.mat').Px_DT;
 
 % phi rotation
 Cphi = load('phiController.mat').Cphi_CT;
 Cphi_DT = load('phiController.mat').Cphi_DT;
 Pphi = load('Pphi_fit.mat').Pphi_CT;
+Pphi_DT = load('Pphi_fit.mat').Pphi_DT;
 
 % Interconnection.
 SPy = minreal(feedback(Py_DT, Cy_DT));
@@ -76,6 +79,18 @@ SP = SPy;
 % Stack for MIMO
 C_zpk = blkdiag(Cy, Cx, Cphi);
 P_zpk = blkdiag(Py, Px, Pphi);
+
+%% To test out the phi error because it is huge.
+
+openLoopPhi = series(Cphi_DT, Pphi_DT);
+openLoopX = series(Cx_DT, Px_DT);
+openLoopY = series(Cy_DT, Py_DT);
+
+closedLoopPhi = feedback(openLoopPhi, 1);
+closedLoopX = feedback(openLoopX, 1);
+closedLoopY = feedback(openLoopY, 1);
+
+
 
 %% -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 % The decoupled plant (Need to copy to Run file)
@@ -119,17 +134,19 @@ Psi_ff_phi = tf([]);
 
 % -+-+-+-+-+-+-+-+ Add Basis functions for C^{y} below -+-+-+-+-+-+-+-+
 % Psi_y(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');
+% Psi_y(2) = tf([1 -2 1],Ts^2,Ts,'Variable','z^-1');
 
 % -+-+-+-+-+-+-+-+ Add Basis functions for C^{ff}_x -+-+-+-+-+-+-+-+
-Psi_ff_x(1) = tf([1 -2 1],Ts^2,Ts,'Variable','z^-1');   % Acceleration basis function
-Psi_ff_x(2) = tf([1 -1],Ts,Ts,'Variable','z^-1');       % First derivative.
+Psi_ff_x(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');       % First derivative.
+Psi_ff_x(2) = tf([1 -2 1],Ts^2,Ts,'Variable','z^-1');   % Acceleration basis function
 
 % -+-+-+-+-+-+-+-+ Add Basis functions for C^{ff}_{phi} -+-+-+-+-+-+-+-+
-% Psi_ff_phi(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');
+Psi_ff_phi(1) = tf([1 -1],Ts,Ts,'Variable','z^-1');
+% Psi_ff_phi(2) = tf([1 -0.5],Ts,Ts,'Variable','z^-1');
 
 
 % Intial theta theta -> [Cff_y Cff_x Cff_phi]
-theta_init = [0 26 5]';
+theta_init = [1 20 0.003]';
 
 
 
