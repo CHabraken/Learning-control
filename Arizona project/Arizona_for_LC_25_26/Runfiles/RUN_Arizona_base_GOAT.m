@@ -503,3 +503,36 @@ pause(1);
 waitfor(msgbox('Confirm that Arizona power switch is off again!','Check') );
 
 tg.stop;
+%% Store data
+addpath(genpath('../Own_function'))
+
+
+Log = DataLogger();
+Log.OpenFile('MeasurementData','Overview.txt');
+
+Log.SetMeasurement("Measurement");
+
+Log.StoreHistory(history);
+
+
+%voeg gewenste parameters to voor de visualisatie in de log file
+standstillSamples = [500:1500];%juiste samples invullen
+Log.SetGeneralParameters( ...
+    "Samples", string(standstillSamples(1)) + ":" + string(standstillSamples(end))... 
+    "We_x", we, ...
+    ); %voeg alle wegings factoren en andere waardes toe die voor de voledige meeting hetzelfde blijven
+
+%add all parameters of interest
+SaveEvery_X_Trials = 1;
+
+for i = 1 : length(history)
+    if(mod(i,SaveEvery_X_Trials))
+        
+
+        %calculate stand still error
+        %e_norm_standstill = norm(e(standstillSamples),2);
+
+    end
+end
+
+Log.ClearVariables();
