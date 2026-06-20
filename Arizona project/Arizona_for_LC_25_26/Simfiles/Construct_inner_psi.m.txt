@@ -1,0 +1,26 @@
+function Psi_inner = Construct_inner_psi(Psi_x, Psi_phi)
+    nx = size(Psi_x);
+    nphi = size(Psi_phi);
+    
+    rows = max(nx(1),nphi(1));
+    columns = nx(2)+nphi(2); %ref length
+
+    if(nx(1)~=0 &&nx(1) < rows)
+        append = rows - nx(1);
+        Psi_x = [Psi_x; zeros(append, nx(2))];
+    end
+
+    if(nphi(1)~=0 && nphi(1) < rows)
+        append = rows - nphi(1);
+        Psi_phi = [Psi_phi; zeros(append, nphi(2))];
+    end
+
+    % Psi_x   
+    % Psi_phi
+
+    Psi_inner = zeros(2*rows,columns);
+    Psi_inner(1:2:end,1:nx(2)) = Psi_x;
+    Psi_inner(2:2:end,nx(2)+1:end) = Psi_phi;
+    % size(Psi_inner);
+    % Psi_inner
+end

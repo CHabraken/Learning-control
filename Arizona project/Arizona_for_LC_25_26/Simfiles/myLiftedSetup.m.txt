@@ -1,0 +1,86 @@
+function out = myLiftedSetup(G,Cfb,ref)
+    addpath(genpath('../Own_function'));
+    out = struct();
+    
+    %only get x and phi
+    C = Cfb(2:end, 2:end);
+    G = G(2:end,2:end);
+    G = tf(G);
+    %decouple system
+    L = 2.62;
+    Tu = [1/2, -1/L; 1/2, 1/L];
+    Ty = [1/2, 1/2; -1/L, 1/L];
+
+    P = minreal(Ty*G*Tu);
+    
+    % Create closed loops
+    loops = loopsens(P,C);
+    PS = loops.PSi;
+    S = loops.So;
+    CS = loops.CSo;
+
+    SP = S*P;
+    SPC = SP*C;
+    
+    N = length(ref);
+
+    %Weighting
+    phi_scale = L/2*pi/180;
+
+    we_x = 1;
+    wf_x = 3;
+    wdf_x = 0;
+    wry_x = 2;
+    wdry_x = 0;
+    
+    we_phi = phi_scale*1;
+    wf_phi = phi_scale*0;
+    wdf_phi = phi_scale*0;
+    wry_phi = phi_scale*2;
+    wdry_phi = phi_scale*0;
+    
+    We   = kron(eye(N), diag([we_x   we_phi]));
+    Wf   = kron(eye(N), diag([wf_x   wf_phi]));
+    Wdf  = kron(eye(N), diag([wdf_x  wdf_phi]));
+    Wry  = kron(eye(N), diag([wry_x  wry_phi]));
+    Wdry = kron(eye(N), diag([wdry_x wdry_phi]));
+
+    Wd = blkdiag(Wdry,Wdf);
+    Wa = blkdiag(Wry, Wf);
+
+    %Basis functions
+    % ref = ref(600:603,1:2);
+    r = liftedSignal(ref(:,1),ref(:,2));
+
+    Psi_y_x = [ones(1,N);2*ones(1,N)];
+    Psi_y_phi = [ones(1,N)];
+
+    Psi_ff_x    = [10*ones(1,N);20*ones(1,N)];
+    Psi_ff_phi  = [30*ones(1,N)];
+
+    psi_y = Construct_inner_psi(Psi_y_x,Psi_y_phi);
+    psi_ff = Construct_inner_psi(Psi_ff_x, Psi_ff_phi);
+
+    PSI = blkdiag(psi_y,psi_ff);
+
+    
+    SP_y = mimoImpulse(SP.A,SP.B,SP.C,SP.D,N);
+    S_y = mimoImpulse(S.A,S.B,S.C,S.D,N);
+
+    SP_lifted = liftedMatrix(SP_y);
+    S_lifted = liftedMatrix(S_y);
+
+    tol = 1e-12;
+    SP_lifted(abs(SP_lifted) < tol) = 0;
+    S_lifted(abs(S_lifted) < tol) = 0;
+    
+    F = [-S_lifted SP_lifted];
+
+    Inv_term = inv(PSI'*(F'*We*F+Wa+Wd)*PSI);
+
+    L = Inv_term * PSI'*F'*We;
+    Q = Inv_term * (PSI'*(F'*We*F+Wd)*PSI);
+
+    figure; mesh(L);
+    figure; mesh(Q);
+end
