@@ -21,6 +21,7 @@ addpath(genpath('../Build'))
 addpath(genpath('../Utility_functions'))
 addpath(genpath('../ILC_updates'))
 addpath(genpath('../References'))
+addpath(genpath('..\Models\Models_new\Models\Parametric'))
 
 %% Parameters and settings
 Ts = get_Arizona_pars();
@@ -32,7 +33,7 @@ Ts = 0.001; % sampling time
 %[xref, yref, phiref, t] = reference_triangle(Ts);
 % [xref, yref, phiref, t] = reference_rounded_rectangle(Ts);
 load('Reference_X_slow.mat')
-N = 13000;
+N = 1;
 [yref, xref, phiref, t] = pad_reference_to_N_zeros(yref, xref, phiref,N, Ts);
 t = t';
 % traj_number = 1;    
@@ -51,13 +52,13 @@ Nref = length(xref);
 % load('yController.mat')
 % Cy = Cy_CT;
 % 
-% % x translation
-% load('xController.mat');
-% Cx = Cx_CT;
-% 
-% % phi rotation
-% load('phiController.mat');
-% Cphi = Cphi_CT;
+% x translation
+Cx = 1/4*load('..\Controllers\xControllerBad.mat').shapeit_data.C_tf_z;
+
+% phi rotation
+Cphi = 1/4*load('..\Controllers\phiController.mat').Cphi_DT;
+
+C_tf = [Cx tf(0); tf(0) Cphi]
 
 P = load('Models_new\Models\Parametric\P_centralized.mat').Pz;
 
@@ -71,13 +72,16 @@ P = load('Models_new\Models\Parametric\P_centralized.mat').Pz;
 % Stack for MIMO
 % C_zpk = blkdiag(Cx, Cphi);
 
-L = 2.62;
-
-Tu = [1/2, -1/L;  1/2, 1/L];
-Ty = [1/2, 1/2; -1/L, 1/L];
-P_zpk = Ty*P*Tu;
+% L = 2.62;
+% 
+% Tu = [1/2, -1/L;  1/2, 1/L];
+% Ty = [1/2, 1/2; -1/L, 1/L];
+% P_zpk = Ty*P*Tu
 %% lifted ILC
-
+% myLiftedSetup(P,C_tf,[xref,phiref])
+G = P; Cfb = C_tf; ref = [xref,phiref];
+myLiftedSetup()
+return
 
 %% Interconnection.
 % [S,SP] = ClosedLoopTransfers(P_zpk,C_zpk);

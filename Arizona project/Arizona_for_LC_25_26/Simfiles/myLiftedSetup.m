@@ -1,11 +1,11 @@
-function out = myLiftedSetup(G,Cfb,ref)
+% function out = myLiftedSetup(G,Cfb,ref)
     addpath(genpath('../Own_function'));
     out = struct();
     
     %only get x and phi
-    C = Cfb(2:end, 2:end);
-    G = G(2:end,2:end);
-    G = tf(G);
+    C = Cfb;
+    % G = G(2:end,2:end);
+    % G = tf(G);
     %decouple system
     L = 2.62;
     Tu = [1/2, -1/L; 1/2, 1/L];
@@ -52,11 +52,13 @@ function out = myLiftedSetup(G,Cfb,ref)
     % ref = ref(600:603,1:2);
     r = liftedSignal(ref(:,1),ref(:,2));
 
-    Psi_y_x = [ones(1,N);2*ones(1,N)];
-    Psi_y_phi = [ones(1,N)];
+    v = velocityEstimate(xref,Ts);
 
-    Psi_ff_x    = [10*ones(1,N);20*ones(1,N)];
-    Psi_ff_phi  = [30*ones(1,N)];
+    Psi_y_x = v;%[ones(N,1),2*ones(N,1)];
+    Psi_y_phi = [];%[ones(N,1)];
+
+    Psi_ff_x    = v;%[10*ones(N,1),20*ones(N,1)];
+    Psi_ff_phi  = v;%[30*ones(N,1)];
 
     psi_y = Construct_inner_psi(Psi_y_x,Psi_y_phi);
     psi_ff = Construct_inner_psi(Psi_ff_x, Psi_ff_phi);
@@ -83,4 +85,8 @@ function out = myLiftedSetup(G,Cfb,ref)
 
     figure; mesh(L);
     figure; mesh(Q);
-end
+    
+    %iets gaat fout met matrix sizes!!
+    [~,sigma,~] = svd(Q-L*F);
+    figure; plot(sigma);
+% end
