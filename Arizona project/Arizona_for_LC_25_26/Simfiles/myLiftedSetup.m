@@ -78,7 +78,8 @@
     
     F = [-S_lifted SP_lifted];
 
-    Inv_term = inv(PSI'*(F'*We*F+Wa+Wd)*PSI);
+    M = PSI'*(F'*We*F+Wa+Wd)*PSI;
+    Inv_term = inv(M);
 
     L = Inv_term * PSI'*F'*We;
     Q = Inv_term * (PSI'*(F'*We*F+Wd)*PSI);
@@ -86,7 +87,6 @@
     figure; mesh(L);
     figure; mesh(Q);
     
-    %iets gaat fout met matrix sizes!!
-    [~,sigma,~] = svd(Q-L*F);
+    [~,sigma,~] = svd(Q-L*(F*PSI));
     figure; plot(sigma);
 % end
